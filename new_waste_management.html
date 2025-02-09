@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Management Submission</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .container { max-width: 400px; margin: auto; }
+        button, select, input { padding: 10px; margin-top: 10px; cursor: pointer; width: 100%; }
+        img { width: 100%; max-height: 200px; margin-top: 10px; display: none; border-radius: 10px; }
+        video, canvas { width: 100%; max-width: 400px; border-radius: 10px; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Waste Management Submission</h2>
+        
+        <!-- User Details -->
+        <input type="text" id="name" placeholder="Enter Your Name" required>
+        <input type="tel" id="phone" placeholder="Enter Your Phone Number" required>
+
+        <!-- Camera & File Upload -->
+        <video id="video" autoplay></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <img id="capturedImage" alt="Captured Image" />
+        <button id="capture">Capture Image</button>
+        <input type="file" id="fileInput" accept="image/*">
+
+        <!-- Waste Type Selection -->
+        <select id="wasteType">
+            <option value="plastic">Plastic</option>
+            <option value="organic">Organic</option>
+            <option value="metal">Metal</option>
+            <option value="electronic">Electronic</option>
+        </select>
+
+        <!-- Location Capture -->
+        <button onclick="getLocation()">📍 Get Current Location</button>
+        <p id="location">Location: Not captured</p>
+
+        <!-- Submit Button -->
+        <button id="submit">Submit Request</button>
+    </div>
+    
+    <script>
+        let latitude, longitude, capturedImage = null;
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const captureBtn = document.getElementById("capture");
+        const imgElement = document.getElementById("capturedImage");
+        const fileInput = document.getElementById("fileInput");
+
+        // Access Camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => console.error("Camera access denied:", err));
+
+        // Capture Image
+        captureBtn.addEventListener("click", () => {
+            const ctx = canvas.getContext("2d");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            capturedImage = canvas.toDataURL("image/png");
+            imgElement.src = capturedImage;
+            imgElement.style.display = "block";
+            video.style.display = "none";
+        });
+
+        // Handle File Upload
+        fileInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    capturedImage = reader.result;
+                    imgElement.src = capturedImage;
+                    imgElement.style.display = "block";
+                    video.style.display = "none";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Get User's Current Location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    latitude = position.coords.latitude;
+                    longitude = position.coords.longitude;
+                    document.getElementById('location').innerText = `Location: ${latitude}, ${longitude}`;
+                }, error => {
+                    alert("Unable to retrieve location. Please enable GPS.");
+                    console.error("Geolocation error:", error);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        // Submit Request
+        document.getElementById("submit").addEventListener("click", () => {
+            const name = document.getElementById("name").value;
+            const phone = document.getElementById("phone").value;
+            const wasteType = document.getElementById("wasteType").value;
+            
+            if (!name || !phone || !capturedImage || !latitude || !longitude) {
+                alert("Please fill all the details, capture/upload an image, and get your location.");
+                return;
+            }
+            
+            console.log("Name:", name);
+            console.log("Phone:", phone);
+            console.log("Waste Image:", capturedImage);
+            console.log("Location:", latitude, longitude);
+            console.log("Waste Type:", wasteType);
+            alert(`Request Submitted!\nName: ${name}\nPhone: ${phone}\nWaste Type: ${wasteType}\nLocation: ${latitude}, ${longitude}`);
+        });
+    </script>
+</body>
+</html>
